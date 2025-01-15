@@ -1,12 +1,14 @@
 package com.ohgiraffers.restapi.section02.responseentity;
 
 import org.springframework.cglib.core.Local;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.Charset;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/entity")
@@ -30,4 +32,18 @@ public class ResponseEntityController {
         users.add(new UserDTO(3, "user03", "pass03", "러바오", LocalDate.now()));
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<ResponseMessage> findAllUsers() {
+
+        HttpHeaders headers = new HttpHeaders();
+        // 응답 할 데이터의 양식 지정
+        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("user", users);
+
+        ResponseMessage responseMessage = new ResponseMessage(200, "조회 성공", responseMap);
+
+        return new ResponseEntity<>(responseMessage, headers, HttpStatus.OK);
+    }
 }
