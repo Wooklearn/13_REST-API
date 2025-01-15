@@ -1,14 +1,15 @@
 package com.ohgiraffers.restapi.section02.responseentity;
 
+import org.apache.catalina.User;
 import org.springframework.cglib.core.Local;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/entity")
@@ -45,5 +46,75 @@ public class ResponseEntityController {
         ResponseMessage responseMessage = new ResponseMessage(200, "조회 성공", responseMap);
 
         return new ResponseEntity<>(responseMessage, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/users/{userNo}")
+    public ResponseEntity<ResponseMessage> findUserByNo(@PathVariable int userNo) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+
+        UserDTO foundUser =
+                users.stream()
+                     .filter(user -> user.getNo() == userNo)
+                     .collect(Collectors.toList())
+                     .get(0);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("user", foundUser);
+
+        return ResponseEntity.ok()
+                             .headers(headers)
+                             .body(new ResponseMessage(200, "조회성공", responseMap));
+    }
+
+    /* comment.
+     *   form 태그로 데이터 전달 받는 것과
+     *   javaScript 로 데이터 전달 받는 것이 다르다.
+     *  */
+    @PostMapping("/user/regist")
+    public ResponseEntity<?> regist(@RequestBody UserDTO newUser) {
+
+        System.out.println("Json 데이터 @RequestBody 로 들어오니 : " + newUser);
+
+        // List 에 들어있는 마지막 no 가져오기
+        int lastNo = users.get(users.size() - 1).getNo();
+        newUser.setNo(lastNo + 1);
+
+        return ResponseEntity
+                // 201 상태코드 -> 등록 관련(자원 생성 관련) 상태코드
+                .created(URI.create("/entity/users/" + users.get(users.size() - 1).getNo()))
+                .build();
+    }
+
+    /* 수정 */
+    @PutMapping("/users/{userNo}")
+    public ResponseEntity<?> modifyUser(@PathVariable int userNo, @RequestBody UserDTO modifyInfo) {
+        // 회원 정보 수정을 위한 유저 특정하기
+        UserDTO foundUser =
+                users.stream().filter(user -> user.getNo() == userNo)
+                        .collect(Collectors.toList()).get(0);
+
+        // id, pw, name 수정하기
+        foundUser.setId(modifyInfo.getId());
+        foundUser.setPwd(modifyInfo.getPwd());
+        foundUser.setName(modifyInfo.getName());
+
+        return ResponseEntity.created(URI.create("/entity/uwers/" + userNo)).build();
+    }
+
+    /* 삭제 */
+    @DeleteMapping("/users/{userNo}")
+    public ResponseEntity<?> removeUser(@PathVariable int userNo) {
+
+        // userNO 1명 특정
+        UserDTO foundUser =
+                users.stream().filter(user -> user.getNo() == userNo)
+                        .collect(Collectors.toList()).get(0);
+
+        // 특정한 유저 객체 배열에서 삭제
+        users.remove(foundUser);
+
+        // 자원 삭제 관련 noContent
+        return ResponseEntity.noContent().build();
     }
 }
