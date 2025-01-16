@@ -99,7 +99,7 @@ public class ResponseEntityController {
         foundUser.setPwd(modifyInfo.getPwd());
         foundUser.setName(modifyInfo.getName());
 
-        return ResponseEntity.created(URI.create("/entity/uwers/" + userNo)).build();
+        return ResponseEntity.created(URI.create("/entity/users/" + userNo)).build();
     }
 
     /* 삭제 */
